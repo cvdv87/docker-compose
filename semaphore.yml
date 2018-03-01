@@ -1,0 +1,64 @@
+version: '2'
+
+services:
+services:
+   httpd:
+    image: "httpd"
+    container_name: "httpd"
+    ports:
+    - "443:443"
+    - "80:80"
+    environment:
+    - TZ=Europe/Amsterdam
+    volumes:
+    - $PATH/server.crt:/usr/local/apache2/conf/server.crt:ro
+    - $PATH/certificates/server.key:/usr/local/apache2/conf/server.key:ro
+    - $PATH/certificates/server-ca.crt:/usr/local/apache2/conf/server-ca.crt:ro
+    - $PATH/data/httpd/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    - $PATH/data/httpd/httpd-ssl.conf:/usr/local/apache2/conf/extra/httpd-ssl.conf:ro
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+   semaphore:
+    image: "gcavalcante8808/semaphore"
+    container_name: "semaphore"
+    ports:
+    - "3000:3000"
+    environment:
+    - TZ=Europe/Amsterdam
+    - MYSQL_HOST=mariadb-server
+    - MYSQL_PORT=3306
+    - MYSQL_USER=USERNAME_HERE
+    - MYSQL_PASSWORD=PASSWD_HERE
+    - MYSQL_DATABASE=DB_NAME
+    volumes:
+    - /opt/bct/data/ansible:/home/webserver/ansible:rw
+    depends_on:
+    - mariadb-server
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+   mariadb-server:
+     image: mariadb
+     container_name: "mariadb-server"
+     ports:
+     - "3306:3306"
+     environment:
+     - TZ=Europe/Amsterdam
+     - MYSQL_ROOT_PASSWORD=root
+     volumes:
+     - /opt/bct/data/mariadb:/var/lib/mysql:rw
+     restart: always
+     logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
